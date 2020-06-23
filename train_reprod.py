@@ -5,146 +5,11 @@ import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.io
-import skill_metrics as sm
-import tensorflow as tf
-from scipy.signal import find_peaks, hilbert
 from sklearn.preprocessing import MinMaxScaler
-from tensorflow.keras import Sequential, callbacks
-from tensorflow.keras.layers import Dense, Flatten
-from tensorflow.keras.optimizers import Adam
 
-
-def get_periods(serie: np.ndarray) -> np.ndarray:
-    """
-    Extract periods with most importance in 
-    the Fourier Transformed Serie.
-
-    Parameters
-    ----------
-    serie : np.ndarray
-        The serie which you will analyze.
-
-    Returns
-    -------
-    np.ndarray
-        Periods with most importance in FFTed serie.
-
-    """
-    fft_serie = np.fft.fft(serie)
-    fft_serie = fft_serie[:int(fft_serie.size/2)]
-    fft_serie = hilbert(np.abs(fft_serie))
-    # ts is set to 30 days here
-    # set it for your purpose
-    ts = 30/(24*60)
-    peaks_idx = find_peaks(fft_serie)[0]
-    peaks_idx = np.array(peaks_idx)
-    periodos = np.round(1/(peaks_idx*ts))
-    periodos = sorted(periodos, reverse=True)
-    r_per = []
-    for per in periodos:
-        if per not in r_per and per > 1:
-            r_per.append(per)
-    periodos = np.array(r_per, dtype=np.int64)
-    return periodos
-
-
-def decomp(serie: np.ndarray, periods: np.ndarray) -> np.ndarray:
-    """
-    Decompose the serie according to the given periods.
-
-
-    Parameters
-    ----------
-    serie : np.ndarray
-        The serie which you will decompose.
-
-    periods : np.ndarray
-        Periods of reference
-
-    Returns
-    -------
-    np.ndarray
-        Decomposed Serie in #periods components
-
-    """
-    o = np.zeros((periods[0], periods.size + 1))
-    comp_dados = np.zeros((serie.size - periods[0], periods.size + 1))
-    for i in range(serie.size - periods[0]):
-        o[:, 0] = serie[i:periods[0]+i]
-        for j in range(periods.size):
-            comp_dados[i, j] = np.mean(o[periods[0] - periods[j]:, j])
-            o[:, j+1] = o[:, j] - comp_dados[i, j]
-    return comp_dados
-
-
-def create_model(input_shape: tuple, lr: float):
-    """
-    Creates our DNN Model.
-
-    Parameters
-    ----------
-    input_shape : tuple
-
-    lr : float
-        Learning rate
-
-    Returns
-    -------
-    MLP model
-
-    """
-    regressor = Sequential()
-    regressor.add(Flatten(input_shape=input_shape))
-    regressor.add(Dense(units=160, activation='relu'))
-    regressor.add(Dense(units=180, activation='relu'))
-    regressor.add(Dense(units=160, activation='relu'))
-    regressor.add(Dense(units=240, activation='relu'))
-    regressor.add(Dense(units=1))
-    regressor.summary()
-    Adam(learning_rate=lr)
-    regressor.compile(optimizer='adam', loss='mean_squared_error')
-    return regressor
-
-
-def plot_taylor(ref: np.ndarray, predictions_dict: dict, central: str):
-    """
-    Plots Taylor Diagram refering to Reference Serie
-    Code by: hrc and jvsg (@cin.ufpe.br)
-
-    Parameters
-    ----------
-    ref : np.ndarray
-        Reference Serie to Taylor Diagram
-
-    predictions_dict : dict
-        Dictionary with the predictions you made.
-        e.g: {'MLP': np.array([1,2,3,4,5]), 'LSTM': np.array([1,2,3,4,5])}
-
-    Returns
-    -------
-    None
-
-    """
-    data = {'preds': [v for k, v in predictions_dict.items()],
-            'ref': ref}
-
-    taylor_stats = []
-    for pred in data['preds']:
-        taylor_stats.append(sm.taylor_statistics(pred, data['ref'], 'data'))
-
-    sdev = np.array([taylor_stats[0]['sdev'][0]]+[x['sdev'][1]
-                                                  for x in taylor_stats])
-    crmsd = np.array([taylor_stats[0]['crmsd'][0]]+[x['crmsd'][1]
-                                                    for x in taylor_stats])
-    ccoef = np.array([taylor_stats[0]['ccoef'][0]]+[x['ccoef'][1]
-                                                    for x in taylor_stats])
-
-    # To change other params in the plot, check SkillMetrics documentation in
-    # https://github.com/PeterRochford/SkillMetrics/wiki/Target-Diagram-Options
-    sm.taylor_diagram(sdev, crmsd, ccoef, styleOBS='-',
-                      colOBS='g', markerobs='o',
-                      titleOBS='Observation', markerLabel=['placeholder']+[k for k, v in predictions_dict.items()])
-    plt.savefig(f'data/out/taylor_{central}.png')
+from decomposition import decomp, get_periods
+from model import create_model, get_callbacks, load_model
+from utils import plot_taylor
 
 
 def prepare_data(serie: np.ndarray, dec: bool, central: str) -> tuple:
@@ -159,7 +24,7 @@ def prepare_data(serie: np.ndarray, dec: bool, central: str) -> tuple:
 
     dec : bool
         Rather you wanna decompose or not your serie
-    
+
     central : str
         The dataset name
 
@@ -227,7 +92,7 @@ def main(dataset, test_only=False, dec=True):
 
     # Load data from .mat file and create necessary folders
     matfile = scipy.io.loadmat(dataset)
-    central = dataset.split('/')[1].split('.')[0]
+    central = dataset.split('/')[2].split('.')[0]
     if not os.path.exists(f'data/components/'):
         os.system(f'mkdir data/components/')
     if not os.path.exists(f'data/models/'):
@@ -248,17 +113,11 @@ def main(dataset, test_only=False, dec=True):
     # Prepare Model and fit or load weights
     regressor = create_model(input_shape=(X_train.shape[1], X_train.shape[2]),
                              lr=1e-4)
-    checkpoint_path = f"data/models/{central}/model_{central}.ckpt"
-    cp_callback = callbacks.ModelCheckpoint(filepath=checkpoint_path,
-                                            save_weights_only=False,
-                                            period=2)
-    es_callback = tf.keras.callbacks.EarlyStopping(monitor='loss')
     if not test_only:
         regressor.fit(X_train, y_train, epochs=5,
-                      batch_size=128, callbacks=[cp_callback, es_callback])
+                      batch_size=128, callbacks=get_callbacks(central))
     else:
-        latest = tf.train.latest_checkpoint(f"data/models/{central}")
-        regressor.load_weights(latest)
+        load_model(regressor, central)
 
     # Predict from data
     y_pred = regressor.predict(X_test)
