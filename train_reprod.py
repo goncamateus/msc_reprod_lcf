@@ -33,6 +33,8 @@ def get_periods(serie: np.ndarray) -> np.ndarray:
     fft_serie = np.fft.fft(serie)
     fft_serie = fft_serie[:int(fft_serie.size/2)]
     fft_serie = hilbert(np.abs(fft_serie))
+    # ts is set to 30 days here
+    # set it for your purpose
     ts = 30/(24*60)
     peaks_idx = find_peaks(fft_serie)[0]
     peaks_idx = np.array(peaks_idx)
@@ -55,7 +57,7 @@ def decomp(serie: np.ndarray, periods: np.ndarray) -> np.ndarray:
     ----------
     serie : np.ndarray
         The serie which you will decompose.
-    
+
     periods : np.ndarray
         Periods of reference
 
@@ -75,8 +77,22 @@ def decomp(serie: np.ndarray, periods: np.ndarray) -> np.ndarray:
     return comp_dados
 
 
-def create_model(input_shape, val_data=None, callbacks=None):
-    # Building MLP
+def create_model(input_shape: tuple, lr: float):
+    """
+    Creates our DNN Model.
+
+    Parameters
+    ----------
+    input_shape : tuple
+
+    lr : float
+        Learning rate
+
+    Returns
+    -------
+    MLP model
+
+    """
     regressor = Sequential()
     regressor.add(Flatten(input_shape=input_shape))
     regressor.add(Dense(units=160, activation='relu'))
@@ -85,13 +101,30 @@ def create_model(input_shape, val_data=None, callbacks=None):
     regressor.add(Dense(units=240, activation='relu'))
     regressor.add(Dense(units=1))
     regressor.summary()
-    Adam(learning_rate=1e-4)
+    Adam(learning_rate=lr)
     regressor.compile(optimizer='adam', loss='mean_squared_error')
     return regressor
 
 
-def plot_taylor(ref, predictions_dict, central):
-    # data dict construction
+def plot_taylor(ref: np.ndarray, predictions_dict: dict, central: str):
+    """
+    Plots Taylor Diagram refering to Reference Serie
+    Code by: hrc and jvsg (@cin.ufpe.br)
+
+    Parameters
+    ----------
+    ref : np.ndarray
+        Reference Serie to Taylor Diagram
+
+    predictions_dict : dict
+        Dictionary with the predictions you made.
+        e.g: {'MLP': np.array([1,2,3,4,5]), 'LSTM': np.array([1,2,3,4,5])}
+
+    Returns
+    -------
+    None
+
+    """
     data = {'preds': [v for k, v in predictions_dict.items()],
             'ref': ref}
 
@@ -106,14 +139,35 @@ def plot_taylor(ref, predictions_dict, central):
     ccoef = np.array([taylor_stats[0]['ccoef'][0]]+[x['ccoef'][1]
                                                     for x in taylor_stats])
 
-    # Para alterar outros parametros do gráfico, consultar documentação do skill_metrics em https://github.com/PeterRochford/SkillMetrics/wiki/Target-Diagram-Options
+    # To change other params in the plot, check SkillMetrics documentation in
+    # https://github.com/PeterRochford/SkillMetrics/wiki/Target-Diagram-Options
     sm.taylor_diagram(sdev, crmsd, ccoef, styleOBS='-',
                       colOBS='g', markerobs='o',
                       titleOBS='Observation', markerLabel=['placeholder']+[k for k, v in predictions_dict.items()])
     plt.savefig(f'out/taylor_{central}.png')
 
 
-def prepare_data(serie, dec, central):
+def prepare_data(serie: np.ndarray, dec: bool, central: str) -> tuple:
+    """
+    Preprocess data and separates it in train and test.
+    All the data is normalized.
+
+    Parameters
+    ----------
+    serie : np.ndarray
+        Time Serie data
+
+    dec : bool
+        Rather you wanna decompose or not your serie
+    
+    central : str
+        The dataset name
+
+    Returns
+    -------
+    tuple
+        X_train, y_train, X_test, y_test, normalizer scaler
+    """
     scaler = MinMaxScaler()
     comp_data = scaler.fit_transform(serie.reshape(-1, 1))
     serie = comp_data.squeeze()
@@ -186,7 +240,8 @@ def main(dataset, test_only=False, dec=True):
         serie, dec, central)
 
     # Prepare Model and fit or load weights
-    regressor = create_model(input_shape=(X_train.shape[1], X_train.shape[2]))
+    regressor = create_model(input_shape=(X_train.shape[1], X_train.shape[2]),
+                             lr=1e-4)
     checkpoint_path = f"data/models/{central}/model_{central}.ckpt"
     cp_callback = callbacks.ModelCheckpoint(filepath=checkpoint_path,
                                             save_weights_only=False,
