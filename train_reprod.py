@@ -144,7 +144,7 @@ def plot_taylor(ref: np.ndarray, predictions_dict: dict, central: str):
     sm.taylor_diagram(sdev, crmsd, ccoef, styleOBS='-',
                       colOBS='g', markerobs='o',
                       titleOBS='Observation', markerLabel=['placeholder']+[k for k, v in predictions_dict.items()])
-    plt.savefig(f'out/taylor_{central}.png')
+    plt.savefig(f'data/out/taylor_{central}.png')
 
 
 def prepare_data(serie: np.ndarray, dec: bool, central: str) -> tuple:
@@ -262,13 +262,13 @@ def main(dataset, test_only=False, dec=True):
     plt.plot(y_test/scaler.scale_)
     plt.plot(y_pred/scaler.scale_)
     plt.legend(['Real', 'MLP'])
-    plt.savefig(f'out/result_{central}.png')
+    plt.savefig(f'data/out/result_{central}.png')
     plt.clf()
 
     # Plot diff between Predicted and Real
     plt.figure()
     plt.plot(y_pred.squeeze()/scaler.scale_ - y_test/scaler.scale_)
-    plt.savefig(f'out/diff_{central}.png')
+    plt.savefig(f'data/out/diff_{central}.png')
     plt.clf()
 
     # Plot Taylor Diagram
