@@ -228,6 +228,12 @@ def main(dataset, test_only=False, dec=True):
     # Load data from .mat file and create necessary folders
     matfile = scipy.io.loadmat(dataset)
     central = dataset.split('/')[1].split('.')[0]
+    if not os.path.exists(f'data/components/'):
+        os.system(f'mkdir data/components/')
+    if not os.path.exists(f'data/models/'):
+        os.system(f'mkdir data/models/')
+    if not os.path.exists(f'data/out/'):
+        os.system(f'mkdir data/out/')
     if not os.path.exists(f'data/components/{central}'):
         os.system(f'mkdir data/components/{central}')
     if not os.path.exists(f'data/models/{central}'):
