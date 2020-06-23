@@ -6,9 +6,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.io
 
-from model import create_model, get_callbacks, load_model
-from preprocess import prepare_data
-from utils import plot_taylor
+from reprod.model import create_model, get_callbacks, load_model
+from reprod.preprocess import prepare_data
+from reprod.utils import plot_taylor
 
 
 def main(dataset, test_only=False, dec=True):
