@@ -1,0 +1,4 @@
+tensorflow==2.0.1
+scikit-learn==0.22.1
+SkillMetrics==1.1.7
+scipy==1.4.1
