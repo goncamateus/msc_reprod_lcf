@@ -24,5 +24,5 @@ $pip install -r requirements.txt
     - Set it 0 if you did not created and trained a Model
 
 ```shell
-python main.py --dataset data/inputs/your_serie --decompose 1 --test 0
+$python main.py --dataset data/inputs/your_serie --decompose 1 --test 0
 ```
