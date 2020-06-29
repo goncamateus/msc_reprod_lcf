@@ -4,7 +4,7 @@ import pickle
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 
-from reprod.decomposition import decomp, get_periods
+from reprod.decomposition import decomp, get_periods, gonca_decomp
 
 
 def get_comps(serie, sub=False):
@@ -32,6 +32,19 @@ def get_sub_comps(main_components, central):
             pickle.dump(comps, pf)
 
     return sub_comps, index, menor
+
+
+def gonca_get_sub_comps(main_components, central):
+    sub_comps = []
+    for i, comp in enumerate(main_components[:-1]):
+        comps = get_comps(comp, sub=True).transpose()
+        sub_comps.append(comps)
+        print(f'saving comp {i}')
+        with open('data/components/{}/sub_comps_{}.pkl'.format(
+                central, i), 'wb') as pf:
+            pickle.dump(comps, pf)
+
+    return sub_comps, 0, sub_comps[0].shape[0]
 
 
 def load_sub_comps(central):
@@ -92,7 +105,9 @@ def prepare_data(serie: np.ndarray, dec: bool, central: str) -> tuple:
     serie = comp_data.squeeze()
     if dec:
         main_components = get_comps(serie)
-        sub_comps, index, menor = get_sub_comps(main_components, central)
+        # sub_comps, index, menor = get_sub_comps(main_components, central)
+        sub_comps, index, menor = gonca_get_sub_comps(main_components, central)
+
     else:
         sub_comps, index, menor = load_sub_comps(central)
 
