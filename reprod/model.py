@@ -47,4 +47,4 @@ def get_callbacks(central):
 
 def load_model(regressor, central):
     latest = tf.train.latest_checkpoint(f"data/models/{central}")
-    regressor.load_weights(latest)
+    regressor.load(latest)
