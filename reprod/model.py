@@ -34,12 +34,15 @@ def create_model(input_shape: tuple, lr: float):
 
 
 def get_callbacks(central):
+    cbs = list()
     checkpoint_path = f"data/models/{central}/model_{central}.ckpt"
     cp_callback = callbacks.ModelCheckpoint(filepath=checkpoint_path,
                                             save_weights_only=False,
                                             period=2)
+    cbs.append(cp_callback)
     # es_callback = callbacks.EarlyStopping(monitor='loss')
-    return [cp_callback, es_callback]
+    # cbs.append(es_callback)
+    return cbs
 
 
 def load_model(regressor, central):
