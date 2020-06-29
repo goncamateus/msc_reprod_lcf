@@ -11,7 +11,7 @@ def get_comps(serie, sub=False):
     periods = get_periods(serie)
     plus_str = 'sub comp' if sub else 'serie'
     print(f'Decomp {plus_str} in {periods.size} components')
-    components = gonca_decomp(serie, periods)
+    components = decomp(serie, periods)
 
     return components
 

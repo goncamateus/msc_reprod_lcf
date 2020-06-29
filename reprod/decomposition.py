@@ -58,9 +58,16 @@ def decomp(serie: np.ndarray, periods: np.ndarray) -> np.ndarray:
 
     """
     o = np.zeros((periods[0], periods.size + 1))
-    comp_dados = np.zeros((serie.size - periods[0], periods.size + 1))
-    for i in range(serie.size - periods[0]):
-        o[:, 0] = serie[i:periods[0]+i]
+    comp_dados = np.zeros((serie.size, periods.size + 1))
+    for i in range(0, len(serie), periods[0]):
+        if o[:, 0].shape == serie[i:periods[0]+i].shape:
+            o[:, 0] = serie[i:periods[0]+i]
+        else:
+            mm = np.concatenate(
+                (serie[i:periods[0]+i],
+                 np.zeros(
+                     (o[:, 0].shape[0] - serie[i:periods[0]+i].shape[0],))))
+            o[:, 0] = mm
         for j in range(periods.size):
             comp_dados[i, j] = np.mean(o[periods[0] - periods[j]:, j])
             o[:, j+1] = o[:, j] - comp_dados[i, j]
