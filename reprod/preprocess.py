@@ -105,8 +105,8 @@ def prepare_data(serie: np.ndarray, dec: bool, central: str) -> tuple:
     serie = comp_data.squeeze()
     if dec:
         main_components = get_comps(serie)
-        # sub_comps, index, menor = get_sub_comps(main_components, central)
-        sub_comps, index, menor = gonca_get_sub_comps(main_components, central)
+        sub_comps, index, menor = get_sub_comps(main_components, central)
+        # sub_comps, index, menor = gonca_get_sub_comps(main_components, central)
 
     else:
         sub_comps, index, menor = load_sub_comps(central)
