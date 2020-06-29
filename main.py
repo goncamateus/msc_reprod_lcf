@@ -37,8 +37,8 @@ def main(dataset, test_only=False, dec=True):
     regressor = create_model(input_shape=(X_train.shape[1], X_train.shape[2]),
                              lr=1e-4)
     if not test_only:
-        regressor.fit(X_train, y_train, epochs=5,
-                      batch_size=128, callbacks=get_callbacks(central))
+        regressor.fit(X_train, y_train, epochs=100,
+                      batch_size=32, callbacks=get_callbacks(central))
     else:
         load_model(regressor, central)
 

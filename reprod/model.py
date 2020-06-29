@@ -38,7 +38,7 @@ def get_callbacks(central):
     cp_callback = callbacks.ModelCheckpoint(filepath=checkpoint_path,
                                             save_weights_only=False,
                                             period=2)
-    es_callback = callbacks.EarlyStopping(monitor='loss')
+    # es_callback = callbacks.EarlyStopping(monitor='loss')
     return [cp_callback, es_callback]
 
 
