@@ -47,8 +47,8 @@ def main(dataset, test_only=False, dec=True):
 
     # Plot Real vs Predicted
     plt.figure()
-    plt.plot(y_test/scaler.scale_)
-    plt.plot(y_pred/scaler.scale_)
+    plt.plot(y_test[:1000]/scaler.scale_)
+    plt.plot(y_pred[:1000]/scaler.scale_)
     plt.legend(['Real', 'MLP'])
     plt.savefig(f'data/out/result_{central}.png')
     plt.clf()
