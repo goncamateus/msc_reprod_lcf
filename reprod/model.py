@@ -33,9 +33,9 @@ def create_models(input_shape: tuple, learning_rate: float):
     return regressor
 
 
-def get_callbacks(central):
+def get_callbacks(central, model):
     cbs = list()
-    checkpoint_path = f"data/models/{central}/model_{central}.ckpt"
+    checkpoint_path = f"data/models/{central}/{model}.ckpt"
     cp_callback = callbacks.ModelCheckpoint(filepath=checkpoint_path,
                                             save_weights_only=False,
                                             period=2)
