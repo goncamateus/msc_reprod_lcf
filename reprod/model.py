@@ -22,7 +22,8 @@ def create_models(input_shape: tuple, learning_rate: float, models: list):
 
     Returns
     -------
-    DNN Models
+    list
+        DNN Models
 
     """
     regressors = list()

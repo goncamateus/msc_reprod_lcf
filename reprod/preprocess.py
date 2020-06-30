@@ -34,19 +34,6 @@ def get_sub_comps(main_components, central):
     return sub_comps, index, menor
 
 
-def gonca_get_sub_comps(main_components, central):
-    sub_comps = []
-    for i, comp in enumerate(main_components[:-1]):
-        comps = get_comps(comp, sub=True).transpose()
-        sub_comps.append(comps)
-        print(f'saving comp {i}')
-        with open('data/components/{}/sub_comps_{}.pkl'.format(
-                central, i), 'wb') as pf:
-            pickle.dump(comps, pf)
-
-    return sub_comps, 0, sub_comps[0].shape[0]
-
-
 def load_sub_comps(central):
     sub_comps = []
     menor = 10e20
