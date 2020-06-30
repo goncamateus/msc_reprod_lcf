@@ -34,13 +34,13 @@ def main(dataset, test_only=False, dec=True, regvars=60, models=['MLP']):
 
     # Prepare Model and fit or load weights
     regressors = create_models(input_shape=(
-        X_train.shape[1], X_train.shape[2]), learning_rate=1e-3)
+        X_train.shape[1], X_train.shape[2]), learning_rate=1e-3, models=models)
     if not test_only:
         for i, regressor in enumerate(regressors):
             regressor.fit(X_train, y_train, epochs=10, batch_size=32,
                           callbacks=get_callbacks(central, models[i]))
     else:
-        regressors = load_models(central)
+        load_models(central, regressors, models)
 
     # Predict from data
     preds = list()
