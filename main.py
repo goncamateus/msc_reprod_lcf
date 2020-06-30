@@ -1,17 +1,16 @@
 import argparse
 import os
-import pickle
 
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.io
 
-from reprod.model import create_model, get_callbacks, load_model
+from reprod.model import create_models, get_callbacks, load_models
 from reprod.preprocess import prepare_data
 from reprod.utils import plot_taylor
 
 
-def main(dataset, test_only=False, dec=True):
+def main(dataset, test_only=False, dec=True, regvars=60, models=['MLP']):
 
     # Load data from .mat file and create necessary folders
     matfile = scipy.io.loadmat(dataset)
@@ -31,47 +30,74 @@ def main(dataset, test_only=False, dec=True):
     serie_nan = np.array(matfile['P'], dtype=np.float32)
     serie = serie_nan[~np.isnan(serie_nan)]
     X_train, y_train, X_test, y_test, scaler = prepare_data(
-        serie, dec, central)
+        serie, dec, central, regvars)
 
     # Prepare Model and fit or load weights
-    regressor = create_model(input_shape=(X_train.shape[1], X_train.shape[2]),
-                             lr=1e-3)
+    regressors = create_models(input_shape=(
+        X_train.shape[1], X_train.shape[2]), learning_rate=1e-3)
     if not test_only:
-        regressor.fit(X_train, y_train, epochs=10,
-                      batch_size=32, callbacks=get_callbacks(central))
+        for regressor in regressors:
+            regressor.fit(X_train, y_train, epochs=10,
+                          batch_size=32, callbacks=get_callbacks(central))
     else:
-        load_model(regressor, central)
+        regressors = load_models(central)
 
     # Predict from data
-    y_pred = regressor.predict(X_test)
+    preds = list()
+    for i, model in models:
+        y_pred = regressors[i].predict(X_test)
+        preds.append((model, y_pred))
 
     # Plot Real vs Predicted
     plt.figure()
-    plt.plot(y_test[:1000]/scaler.scale_)
-    plt.plot(y_pred[:1000]/scaler.scale_)
-    plt.legend(['Real', 'MLP'])
+    plt.plot(y_test/scaler.scale_)
+    for _, y_pred in preds:
+        plt.plot(y_pred/scaler.scale_)
+    plt.legend(['Real'] + [model for model, _ in preds])
     plt.savefig(f'data/out/result_{central}.png')
+
+    plt.clf()
+    plt.figure()
+    plt.plot(y_test[:1000]/scaler.scale_)
+    for _, y_pred in preds:
+        plt.plot(y_pred[:1000]/scaler.scale_)
+    plt.legend(['Real'] + [model for model, _ in preds])
+    plt.savefig(f'data/out/result_zoomed_{central}.png')
     plt.clf()
 
     # Plot diff between Predicted and Real
-    plt.figure()
-    plt.plot(y_pred.squeeze()/scaler.scale_ - y_test/scaler.scale_)
-    plt.savefig(f'data/out/diff_{central}.png')
-    plt.clf()
+    for model, y_pred in preds:
+        plt.figure()
+        plt.plot(y_pred.squeeze()/scaler.scale_ - y_test/scaler.scale_)
+        plt.savefig(f'data/out/diff_{central}_{model}.png')
+        plt.clf()
 
     # Plot Taylor Diagram
-    predictions_dict = {'MLP': y_pred.squeeze()/scaler.scale_}
+    predictions_dict = {model: y_pred.squeeze(
+    )/scaler.scale_ for model, y_pred in preds}
     plot_taylor(y_test/scaler.scale_, predictions_dict, central)
 
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description='Predicts your time series')
-    parser.add_argument('--dataset', metavar='dataset', type=str, default='data/G1.mat',
-                        help='Which dataset (.mat) you wanna choose from ./data')
-    parser.add_argument('--test', metavar='test', type=int,
-                        default=0, help='Rather you wanna train or not your model')
-    parser.add_argument('--decompose', metavar='dec', type=int, default=1,
+    PARSER = argparse.ArgumentParser(description='Predicts your time series')
+    PARSER.add_argument('--dataset', metavar='dataset',
+                        type=str, default='data/G1.mat',
+                        help='Which dataset (.mat)\
+                             you wanna choose from ./data')
+    PARSER.add_argument('--test', metavar='test',
+                        type=int, default=0,
+                        help='Rather you wanna train or not your model')
+    PARSER.add_argument('--decompose', metavar='dec',
+                        type=int, default=1,
                         help='Rather you wanna decompose or not your serie')
-    args = parser.parse_args()
-    main(args.dataset, test_only=bool(args.test), dec=bool(args.decompose))
+    PARSER.add_argument('--regvars', metavar='regvars',
+                        type=int, default=60,
+                        help='How many regvars you want for your model(s)')
+    PARSER.add_argument('--models', metavar='models',
+                        type=str, default='MLP',
+                        help='Which DNN models you wanna try (MLP, GRU, LSTM)')
+    ARGS = PARSER.parse_args()
+    MODELS = ARGS.models.upper().split(',')
+    main(ARGS.dataset, test_only=bool(ARGS.test),
+         dec=bool(ARGS.decompose), regvars=ARGS.regvars, models=MODELS)

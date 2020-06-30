@@ -51,7 +51,8 @@ def load_sub_comps(central):
     sub_comps = []
     menor = 10e20
     index = 0
-    for i, fp in enumerate(os.listdir('data/components/{}/'.format(central))):
+    for i, fp in enumerate(os.listdir(
+            'data/components/{}/'.format(central))):
         with open('data/components/{}/'.format(central)+fp, 'rb') as pf:
             comps = pickle.load(pf)
             sub_comps.append(comps)
@@ -61,7 +62,7 @@ def load_sub_comps(central):
     return sub_comps, index, menor
 
 
-def set_data(serie, sub_comps, index, menor):
+def set_data(serie, sub_comps, index, menor, reg_vars=60):
     data = np.zeros((sub_comps[index].shape[0], 1))
     for i in range(len(sub_comps)):
         if i == 0:
@@ -71,15 +72,16 @@ def set_data(serie, sub_comps, index, menor):
             data = np.concatenate((data, sub_comps[i][:menor]), 1)
 
     X = []
-    y = serie[60:data.shape[0]]
+    y = serie[reg_vars:data.shape[0]]
 
-    for i in range(60, data.shape[0]):
-        X.append(data[i-60:i])
+    for i in range(reg_vars, data.shape[0]):
+        X.append(data[i-reg_vars:i])
 
     return np.array(X), np.array(y)
 
 
-def prepare_data(serie: np.ndarray, dec: bool, central: str) -> tuple:
+def prepare_data(serie: np.ndarray, dec: bool,
+                 central: str, reg_vars: int) -> tuple:
     """
     Preprocess data and separates it in train and test.
     All the data is normalized.
@@ -95,6 +97,9 @@ def prepare_data(serie: np.ndarray, dec: bool, central: str) -> tuple:
     central : str
         The dataset name
 
+    reg_vars : int
+        How many regvars you want for your model(s)
+
     Returns
     -------
     tuple
@@ -106,12 +111,11 @@ def prepare_data(serie: np.ndarray, dec: bool, central: str) -> tuple:
     if dec:
         main_components = get_comps(serie)
         sub_comps, index, menor = get_sub_comps(main_components, central)
-        # sub_comps, index, menor = gonca_get_sub_comps(main_components, central)
 
     else:
         sub_comps, index, menor = load_sub_comps(central)
 
-    X, y = set_data(serie, sub_comps, index, menor)
+    X, y = set_data(serie, sub_comps, index, menor, reg_vars=reg_vars)
     X_train = X[:int(len(X)*0.7)]
     X_test = X[int(len(X)*0.7):]
     y_train = y[:int(len(y)*0.7)]

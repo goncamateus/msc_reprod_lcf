@@ -1,10 +1,10 @@
 import tensorflow as tf
 from tensorflow.keras import Sequential, callbacks
-from tensorflow.keras.layers import Dense, Flatten
+from tensorflow.keras.layers import GRU, Dense, Flatten
 from tensorflow.keras.optimizers import Adam
 
 
-def create_model(input_shape: tuple, lr: float):
+def create_models(input_shape: tuple, learning_rate: float):
     """
     Creates our DNN Model.
 
@@ -28,7 +28,7 @@ def create_model(input_shape: tuple, lr: float):
     regressor.add(Dense(units=240, activation='relu'))
     regressor.add(Dense(units=1))
     regressor.summary()
-    Adam(learning_rate=lr)
+    Adam(learning_rate=learning_rate)
     regressor.compile(optimizer='adam', loss='mean_squared_error')
     return regressor
 
@@ -40,11 +40,12 @@ def get_callbacks(central):
                                             save_weights_only=False,
                                             period=2)
     cbs.append(cp_callback)
-    # es_callback = callbacks.EarlyStopping(monitor='loss')
-    # cbs.append(es_callback)
+    es_callback = callbacks.EarlyStopping(monitor='loss')
+    cbs.append(es_callback)
     return cbs
 
 
-def load_model(regressor, central):
+def load_models(central):
     latest = tf.train.latest_checkpoint(f"data/models/{central}")
     regressor = tf.saved_model.load(latest)
+    return regressor

@@ -9,20 +9,30 @@ $pip install -r requirements.txt
 
 ## Usage
 
-- Dataset: 
+- dataset: 
     
     - The input time serie you want to fit in our model
 
-- Decompose:
+- decompose:
 
     - Rather you wanna decompose or not your serie
     - Set it 1 if you did not decomposed your serie yet
 
-- Test:
+- test:
 
     - Rather you wanna train or not your model
     - Set it 0 if you did not created and trained a Model
 
+- regvars:
+    
+    - How many regressor variables you want for your model(s)
+    - Default is 60
+
+- models:
+
+    - Which DNN models you wanna try.
+    - Choose any combination of MLP, GRU, LSTM
+
 ```shell
-$python main.py --dataset data/inputs/your_serie --decompose 1 --test 0
+$python main.py --dataset data/inputs/your_serie --decompose 1 --test 0 --regvars 60 --models mlp,gru,lstm
 ```
