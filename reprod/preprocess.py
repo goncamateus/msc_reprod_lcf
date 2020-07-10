@@ -4,7 +4,7 @@ import pickle
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 
-from reprod.decomposition import decomp, get_periods, gonca_decomp
+from reprod.decomposition import decomp, get_periods
 
 
 def get_comps(serie, sub=False):
