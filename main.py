@@ -31,7 +31,7 @@ def main(dataset, test_only=False, dec=True,
     serie_nan = np.array(matfile['P'], dtype=np.float32)
     serie = serie_nan[~np.isnan(serie_nan)]
     X_train, y_train, X_test, y_test, scaler = prepare_data(
-        serie, dec, central, regvars)
+        serie, dec, central, regvars, horizons)
 
     # Prepare Model and fit or load weights
     regressors = create_models(input_shape=(X_train.shape[1], X_train.shape[2]),
