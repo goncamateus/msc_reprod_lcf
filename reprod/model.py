@@ -6,7 +6,8 @@ from tensorflow.keras.layers import GRU, LSTM, Dense, Flatten
 from tensorflow.keras.optimizers import Adam
 
 
-def create_models(input_shape: tuple, learning_rate: float, models: list):
+def create_models(input_shape: tuple, learning_rate: float,
+                  models: list, horizons=48):
     """
     Creates our DNN Models.
 
@@ -19,6 +20,9 @@ def create_models(input_shape: tuple, learning_rate: float, models: list):
 
     models : list
         Which models you want to train
+
+    horizons : int
+        Number of horizons you want to predict
 
     Returns
     -------
@@ -34,7 +38,7 @@ def create_models(input_shape: tuple, learning_rate: float, models: list):
         regressor.add(Dense(units=180, activation='relu'))
         regressor.add(Dense(units=160, activation='relu'))
         regressor.add(Dense(units=240, activation='relu'))
-        regressor.add(Dense(units=1))
+        regressor.add(Dense(units=horizons))
         regressor.summary()
         Adam(learning_rate=learning_rate)
         regressor.compile(optimizer='adam', loss='mean_squared_error')
@@ -47,7 +51,7 @@ def create_models(input_shape: tuple, learning_rate: float, models: list):
         regressor.add(GRU(units=180, activation='relu', return_sequences=True))
         regressor.add(GRU(units=160, activation='relu', return_sequences=True))
         regressor.add(GRU(units=240, activation='relu'))
-        regressor.add(Dense(units=1))
+        regressor.add(Dense(units=horizons))
         regressor.summary()
         regressor.compile(optimizer='adam', loss='mean_squared_error')
         regressors.append(regressor)
@@ -61,7 +65,7 @@ def create_models(input_shape: tuple, learning_rate: float, models: list):
         regressor.add(LSTM(units=160, activation='relu',
                            return_sequences=True))
         regressor.add(LSTM(units=240, activation='relu'))
-        regressor.add(Dense(units=1))
+        regressor.add(Dense(units=horizons))
         regressor.summary()
         regressor.compile(optimizer='adam', loss='mean_squared_error')
         regressors.append(regressor)

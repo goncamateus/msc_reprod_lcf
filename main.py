@@ -10,7 +10,8 @@ from reprod.preprocess import prepare_data
 from reprod.utils import plot_taylor
 
 
-def main(dataset, test_only=False, dec=True, regvars=60, models=['MLP']):
+def main(dataset, test_only=False, dec=True,
+         regvars=60, horizons=48, models=['MLP']):
 
     # Load data from .mat file and create necessary folders
     matfile = scipy.io.loadmat(dataset)
@@ -33,8 +34,9 @@ def main(dataset, test_only=False, dec=True, regvars=60, models=['MLP']):
         serie, dec, central, regvars)
 
     # Prepare Model and fit or load weights
-    regressors = create_models(input_shape=(
-        X_train.shape[1], X_train.shape[2]), learning_rate=1e-3, models=models)
+    regressors = create_models(input_shape=(X_train.shape[1], X_train.shape[2]),
+                               learning_rate=1e-3, models=models,
+                               horizons=horizons)
     if not test_only:
         for i, regressor in enumerate(regressors):
             regressor.fit(X_train, y_train, epochs=10, batch_size=32,
@@ -94,10 +96,14 @@ if __name__ == "__main__":
     PARSER.add_argument('--regvars', metavar='regvars',
                         type=int, default=60,
                         help='How many regvars you want for your model(s)')
+    PARSER.add_argument('--horizons', metavar='horizons',
+                        type=int, default=48,
+                        help='How many horizons you want to predict')
     PARSER.add_argument('--models', metavar='models',
                         type=str, default='MLP',
                         help='Which DNN models you wanna try (MLP, GRU, LSTM)')
     ARGS = PARSER.parse_args()
     MODELS = ARGS.models.upper().split(',')
     main(ARGS.dataset, test_only=bool(ARGS.test),
-         dec=bool(ARGS.decompose), regvars=ARGS.regvars, models=MODELS)
+         dec=bool(ARGS.decompose), regvars=ARGS.regvars,
+         horizons=ARGS.horizons, models=MODELS)

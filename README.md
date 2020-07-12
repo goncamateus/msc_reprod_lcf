@@ -28,11 +28,16 @@ $pip install -r requirements.txt
     - How many regressor variables you want for your model(s)
     - Default is 60
 
+- regvars:
+    
+    - How many horizons you want to predict
+    - Default is 48
+
 - models:
 
     - Which DNN models you wanna try.
     - Choose any combination of MLP, GRU, LSTM
 
 ```shell
-$python main.py --dataset data/inputs/your_serie --decompose 1 --test 0 --regvars 60 --models mlp,gru,lstm
+$python main.py --dataset data/inputs/your_serie --decompose 1 --test 0 --regvars 60 --horizons 48 --models mlp,gru,lstm
 ```

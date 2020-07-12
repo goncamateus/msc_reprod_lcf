@@ -49,7 +49,7 @@ def load_sub_comps(central):
     return sub_comps, index, menor
 
 
-def set_data(serie, sub_comps, index, menor, reg_vars=60):
+def set_data(serie, sub_comps, index, menor, reg_vars=60, horizons=48):
     data = np.zeros((sub_comps[index].shape[0], 1))
     for i in range(len(sub_comps)):
         if i == 0:
@@ -59,7 +59,10 @@ def set_data(serie, sub_comps, index, menor, reg_vars=60):
             data = np.concatenate((data, sub_comps[i][:menor]), 1)
 
     X = []
-    y = serie[reg_vars:data.shape[0]]
+    y = list()
+    for i in range(reg_vars, data.shape[0]-horizons+1):
+        obs_y = [serie[i+j] for j in range(horizons)]
+        y.append(obs_y)
 
     for i in range(reg_vars, data.shape[0]):
         X.append(data[i-reg_vars:i])
@@ -68,7 +71,7 @@ def set_data(serie, sub_comps, index, menor, reg_vars=60):
 
 
 def prepare_data(serie: np.ndarray, dec: bool,
-                 central: str, reg_vars: int) -> tuple:
+                 central: str, reg_vars: int, horizons: int) -> tuple:
     """
     Preprocess data and separates it in train and test.
     All the data is normalized.
@@ -87,6 +90,9 @@ def prepare_data(serie: np.ndarray, dec: bool,
     reg_vars : int
         How many regvars you want for your model(s)
 
+    horizons : int
+        Number of horizons you want to predict
+
     Returns
     -------
     tuple
@@ -102,7 +108,8 @@ def prepare_data(serie: np.ndarray, dec: bool,
     else:
         sub_comps, index, menor = load_sub_comps(central)
 
-    X, y = set_data(serie, sub_comps, index, menor, reg_vars=reg_vars)
+    X, y = set_data(serie, sub_comps, index, menor,
+                    reg_vars=reg_vars, horizons=horizons)
     X_train = X[:int(len(X)*0.7)]
     X_test = X[int(len(X)*0.7):]
     y_train = y[:int(len(y)*0.7)]
