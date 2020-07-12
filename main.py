@@ -11,7 +11,7 @@ from reprod.utils import plot_taylor
 
 
 def main(dataset, test_only=False, dec=True,
-         regvars=60, horizons=48, models=['MLP']):
+         regvars=60, horizons=12, models=['MLP']):
 
     # Load data from .mat file and create necessary folders
     matfile = scipy.io.loadmat(dataset)
@@ -34,7 +34,8 @@ def main(dataset, test_only=False, dec=True,
         serie, dec, central, regvars, horizons)
 
     # Prepare Model and fit or load weights
-    regressors = create_models(input_shape=(X_train.shape[1], X_train.shape[2]),
+    regressors = create_models(input_shape=(X_train.shape[1],
+                                            X_train.shape[2]),
                                learning_rate=1e-3, models=models,
                                horizons=horizons)
     if not test_only:
@@ -52,32 +53,45 @@ def main(dataset, test_only=False, dec=True,
 
     # Plot Real vs Predicted
     plt.figure()
-    plt.plot(y_test/scaler.scale_)
-    for _, y_pred in preds:
-        plt.plot(y_pred/scaler.scale_)
-    plt.legend(['Real'] + [model for model, _ in preds])
-    plt.savefig(f'data/out/result_{central}.png')
-
-    plt.clf()
-    plt.figure()
-    plt.plot(y_test[:1000]/scaler.scale_)
-    for _, y_pred in preds:
-        plt.plot(y_pred[:1000]/scaler.scale_)
-    plt.legend(['Real'] + [model for model, _ in preds])
-    plt.savefig(f'data/out/result_zoomed_{central}.png')
-    plt.clf()
-
-    # Plot diff between Predicted and Real
-    for model, y_pred in preds:
-        plt.figure()
-        plt.plot(y_pred.squeeze()/scaler.scale_ - y_test/scaler.scale_)
-        plt.savefig(f'data/out/diff_{central}_{model}.png')
+    for i in range(horizons):
+        real = y_test.transpose()[i]
+        plt.plot(real/scaler.scale_)
+        for _, y_pred in preds:
+            y_pred = y_pred.transpose()[i]
+            plt.plot(y_pred/scaler.scale_)
+        plt.legend(['Real'] + [model for model, _ in preds])
+        plt.title(f'Comparisson for {i+1} horizons')
+        plt.savefig(f'data/out/result_{central}_horizon_{i+1}.png')
         plt.clf()
 
+    for i in range(horizons):
+        real = y_test.transpose()[i][:1000]
+        plt.plot(real/scaler.scale_)
+        for _, y_pred in preds:
+            y_pred = y_pred.transpose()[i][:1000]
+            plt.plot(y_pred/scaler.scale_)
+        plt.legend(['Real'] + [model for model, _ in preds])
+        plt.title(f'Comparisson for {i+1} horizons Zoomed')
+        plt.savefig(f'data/out/result_zoomed_{central}_horizon_{i+1}.png')
+        plt.clf()
+
+    # Plot diff between Predicted and Real
+    for i in range(horizons):
+        real = y_test.transpose()[i]
+        for model, y_pred in preds:
+            y_pred = y_pred.transpose()[i]
+            plt.plot(y_pred/scaler.scale_ - real/scaler.scale_)
+            plt.savefig(f'data/out/diff_{central}_{model}_horizon_{i+1}.png')
+            plt.clf()
+
     # Plot Taylor Diagram
-    predictions_dict = {model: y_pred.squeeze(
-    )/scaler.scale_ for model, y_pred in preds}
-    plot_taylor(y_test/scaler.scale_, predictions_dict, central)
+    predictions_dict = {}
+    for i in range(horizons):
+        for model, y_pred in preds:
+            predictions_dict[model +
+                             f'_{i}'] = y_pred.transpose()[i]/scaler.scale_
+        plot_taylor(y_test.transpose()[i] /
+                    scaler.scale_, predictions_dict, central, i+1)
 
 
 if __name__ == "__main__":
@@ -97,7 +111,7 @@ if __name__ == "__main__":
                         type=int, default=60,
                         help='How many regvars you want for your model(s)')
     PARSER.add_argument('--horizons', metavar='horizons',
-                        type=int, default=48,
+                        type=int, default=12,
                         help='How many horizons you want to predict')
     PARSER.add_argument('--models', metavar='models',
                         type=str, default='MLP',

@@ -28,10 +28,10 @@ $pip install -r requirements.txt
     - How many regressor variables you want for your model(s)
     - Default is 60
 
-- regvars:
+- horizons:
     
     - How many horizons you want to predict
-    - Default is 48
+    - Default is 12
 
 - models:
 

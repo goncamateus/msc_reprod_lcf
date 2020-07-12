@@ -3,7 +3,8 @@ import numpy as np
 import skill_metrics as sm
 
 
-def plot_taylor(ref: np.ndarray, predictions_dict: dict, central: str):
+def plot_taylor(ref: np.ndarray, predictions_dict: dict,
+                central: str, horizon: int):
     """
     Plots Taylor Diagram refering to Reference Serie
     Code by: hrc and jvsg (@cin.ufpe.br)
@@ -16,6 +17,12 @@ def plot_taylor(ref: np.ndarray, predictions_dict: dict, central: str):
     predictions_dict : dict
         Dictionary with the predictions you made.
         e.g: {'MLP': np.array([1,2,3,4,5]), 'LSTM': np.array([1,2,3,4,5])}
+
+    central : str
+        The name of the dataset
+
+    horizon : int
+        The index of horizon
 
     Returns
     -------
@@ -40,5 +47,6 @@ def plot_taylor(ref: np.ndarray, predictions_dict: dict, central: str):
     # https://github.com/PeterRochford/SkillMetrics/wiki/Target-Diagram-Options
     sm.taylor_diagram(sdev, crmsd, ccoef, styleOBS='-',
                       colOBS='g', markerobs='o',
-                      titleOBS='Observation', markerLabel=['placeholder']+[k for k, v in predictions_dict.items()])
-    plt.savefig(f'data/out/taylor_{central}.png')
+                      titleOBS='Observation',
+                      markerLabel=['placeholder']+[k for k, v in predictions_dict.items()])
+    plt.savefig(f'data/out/taylor_{central}_horizon_{horizon}.png')

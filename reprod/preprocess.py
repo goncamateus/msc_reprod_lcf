@@ -49,7 +49,7 @@ def load_sub_comps(central):
     return sub_comps, index, menor
 
 
-def set_data(serie, sub_comps, index, menor, reg_vars=60, horizons=48):
+def set_data(serie, sub_comps, index, menor, reg_vars=60, horizons=12):
     data = np.zeros((sub_comps[index].shape[0], 1))
     for i in range(len(sub_comps)):
         if i == 0:

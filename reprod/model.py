@@ -7,7 +7,7 @@ from tensorflow.keras.optimizers import Adam
 
 
 def create_models(input_shape: tuple, learning_rate: float,
-                  models: list, horizons=48):
+                  models: list, horizons=12):
     """
     Creates our DNN Models.
 
@@ -88,5 +88,5 @@ def get_callbacks(central, model):
 def load_models(central, regressors, models):
     models_path = f"data/models/{central}/"
     for i, model in enumerate(models):
-        path = models_path + model
+        path = models_path + model + '.ckpt'
         regressors[i].load_weights(path)
