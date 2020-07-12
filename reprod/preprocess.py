@@ -64,7 +64,7 @@ def set_data(serie, sub_comps, index, menor, reg_vars=60, horizons=48):
         obs_y = [serie[i+j] for j in range(horizons)]
         y.append(obs_y)
 
-    for i in range(reg_vars, data.shape[0]):
+    for i in range(reg_vars, data.shape[0]-horizons+1):
         X.append(data[i-reg_vars:i])
 
     return np.array(X), np.array(y)
