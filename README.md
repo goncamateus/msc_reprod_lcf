@@ -39,5 +39,5 @@ $pip install -r requirements.txt
     - Choose any combination of MLP, GRU, LSTM
 
 ```shell
-$python main.py --dataset data/inputs/your_serie --decompose 1 --test 0 --regvars 60 --horizons 48 --models mlp,gru,lstm
+$python main.py --dataset data/inputs/your_serie --decompose 1 --test 0 --regvars 60 --horizons 12 --models mlp,gru,lstm
 ```

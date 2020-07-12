@@ -85,13 +85,14 @@ def main(dataset, test_only=False, dec=True,
             plt.clf()
 
     # Plot Taylor Diagram
-    predictions_dict = {}
     for i in range(horizons):
+        predictions_dict = {}
         for model, y_pred in preds:
             predictions_dict[model +
-                             f'_{i}'] = y_pred.transpose()[i]/scaler.scale_
+                             f'_{i+1}'] = y_pred.transpose()[i]/scaler.scale_
         plot_taylor(y_test.transpose()[i] /
                     scaler.scale_, predictions_dict, central, i+1)
+        plt.clf()
 
 
 if __name__ == "__main__":
