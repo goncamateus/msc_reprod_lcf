@@ -40,7 +40,7 @@ def main(dataset, test_only=False, dec=True,
                                horizons=horizons)
     if not test_only:
         for i, regressor in enumerate(regressors):
-            regressor.fit(X_train, y_train, epochs=10, batch_size=32,
+            regressor.fit(X_train, y_train, epochs=3, batch_size=32,
                           callbacks=get_callbacks(central, models[i]))
     else:
         load_models(central, regressors, models)
@@ -61,7 +61,7 @@ def main(dataset, test_only=False, dec=True,
             plt.plot(y_pred/scaler.scale_)
         plt.legend(['Real'] + [model for model, _ in preds])
         plt.title(f'Comparisson for {i+1} horizons')
-        plt.savefig(f'data/out/result_{central}_horizon_{i+1}.png')
+        plt.savefig(f'data/out/{central};result_{central}_horizon_{i+1}.png')
         plt.clf()
 
     for i in range(horizons):
@@ -72,7 +72,8 @@ def main(dataset, test_only=False, dec=True,
             plt.plot(y_pred/scaler.scale_)
         plt.legend(['Real'] + [model for model, _ in preds])
         plt.title(f'Comparisson for {i+1} horizons Zoomed')
-        plt.savefig(f'data/out/result_zoomed_{central}_horizon_{i+1}.png')
+        plt.savefig(
+            f'data/out/{central}/result_zoomed_{central}_horizon_{i+1}.png')
         plt.clf()
 
     # Plot diff between Predicted and Real
@@ -81,7 +82,8 @@ def main(dataset, test_only=False, dec=True,
         for model, y_pred in preds:
             y_pred = y_pred.transpose()[i]
             plt.plot(y_pred/scaler.scale_ - real/scaler.scale_)
-            plt.savefig(f'data/out/diff_{central}_{model}_horizon_{i+1}.png')
+            plt.savefig(
+                f'data/out/{central}/diff_{central}_{model}_horizon_{i+1}.png')
             plt.clf()
 
     # Plot Taylor Diagram

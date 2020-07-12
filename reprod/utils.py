@@ -48,5 +48,6 @@ def plot_taylor(ref: np.ndarray, predictions_dict: dict,
     sm.taylor_diagram(sdev, crmsd, ccoef, styleOBS='-',
                       colOBS='g', markerobs='o',
                       titleOBS='Observation',
-                      markerLabel=['placeholder']+[k for k, v in predictions_dict.items()])
-    plt.savefig(f'data/out/taylor_{central}_horizon_{horizon}.png')
+                      markerLabel=['placeholder']+[
+                          k for k, v in predictions_dict.items()])
+    plt.savefig(f'data/out/{central}/taylor_{central}_horizon_{horizon}.png')
