@@ -38,6 +38,11 @@ $pip install -r requirements.txt
     - Which DNN models you wanna try.
     - Choose any combination of MLP, GRU, LSTM
 
+- epochs:
+
+    - Number of epochs you want to train each model.
+    - Default is 3
+
 ```shell
-$python main.py --dataset data/inputs/your_serie --decompose 1 --test 0 --regvars 60 --horizons 12 --models mlp,gru,lstm
+$python main.py --dataset data/inputs/your_serie --decompose 1 --test 0 --regvars 60 --horizons 12 --models mlp,gru,lstm --epochs 3
 ```

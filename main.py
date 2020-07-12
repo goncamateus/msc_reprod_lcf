@@ -11,7 +11,7 @@ from reprod.utils import plot_taylor
 
 
 def main(dataset, test_only=False, dec=True,
-         regvars=60, horizons=12, models=['MLP']):
+         regvars=60, horizons=12, models=['MLP'], epochs=3):
 
     # Load data from .mat file and create necessary folders
     matfile = scipy.io.loadmat(dataset)
@@ -40,7 +40,7 @@ def main(dataset, test_only=False, dec=True,
                                horizons=horizons)
     if not test_only:
         for i, regressor in enumerate(regressors):
-            regressor.fit(X_train, y_train, epochs=3, batch_size=32,
+            regressor.fit(X_train, y_train, epochs=epochs, batch_size=32,
                           callbacks=get_callbacks(central, models[i]))
     else:
         load_models(central, regressors, models)
@@ -119,8 +119,11 @@ if __name__ == "__main__":
     PARSER.add_argument('--models', metavar='models',
                         type=str, default='MLP',
                         help='Which DNN models you wanna try (MLP, GRU, LSTM)')
+    PARSER.add_argument('--epochs', metavar='epochs',
+                        type=int, default=3,
+                        help='Number of epochs you want to train each model')
     ARGS = PARSER.parse_args()
     MODELS = ARGS.models.upper().split(',')
     main(ARGS.dataset, test_only=bool(ARGS.test),
          dec=bool(ARGS.decompose), regvars=ARGS.regvars,
-         horizons=ARGS.horizons, models=MODELS)
+         horizons=ARGS.horizons, models=MODELS, epochs=ARGS.epochs)
