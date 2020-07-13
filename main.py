@@ -22,6 +22,8 @@ def main(dataset, test_only=False, dec=True,
         os.system(f'mkdir data/models/')
     if not os.path.exists(f'data/out/'):
         os.system(f'mkdir data/out/')
+    if not os.path.exists(f'data/out/{central}'):
+        os.system(f'mkdir data/out/{central}')
     if not os.path.exists(f'data/components/{central}'):
         os.system(f'mkdir data/components/{central}')
     if not os.path.exists(f'data/models/{central}'):
@@ -61,7 +63,7 @@ def main(dataset, test_only=False, dec=True,
             plt.plot(y_pred/scaler.scale_)
         plt.legend(['Real'] + [model for model, _ in preds])
         plt.title(f'Comparisson for {i+1} horizons')
-        plt.savefig(f'data/out/{central};result_{central}_horizon_{i+1}.png')
+        plt.savefig(f'data/out/{central}/result_{central}_horizon_{i+1}.png')
         plt.clf()
 
     for i in range(horizons):
