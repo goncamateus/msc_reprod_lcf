@@ -14,7 +14,7 @@ def get_comps(serie, sub=False):
     print(f'Decomp {plus_str} in {periods.size} components')
     components = decomp(serie, periods)
 
-    return components
+    return components, periods
 
 
 def get_sub_comps(main_components, central):
@@ -22,15 +22,15 @@ def get_sub_comps(main_components, central):
     menor = 10e20
     index = 0
     for i, comp in enumerate(main_components.transpose()[:-1]):
-        comps = get_comps(comp, sub=True)
+        comps, sub_periods = get_comps(comp, sub=True)
         if comps.shape[0] < menor:
             menor = comps.shape[0]
             index = i
-        sub_comps.append(comps)
+        sub_comps.append((comps, sub_periods))
         print(f'saving comp {i}')
         with open('data/components/{}/sub_comps_{}.pkl'.format(
                 central, i), 'wb') as pf:
-            pickle.dump(comps, pf)
+            pickle.dump((comps, sub_periods), pf)
 
     return sub_comps, index, menor
 
@@ -42,12 +42,21 @@ def load_sub_comps(central):
     for i, fp in enumerate(os.listdir(
             'data/components/{}/'.format(central))):
         with open('data/components/{}/'.format(central)+fp, 'rb') as pf:
-            comps = pickle.load(pf)
-            sub_comps.append(comps)
+            comps, sub_periods = pickle.load(pf)
+            sub_comps.append((comps, sub_periods))
             if comps.shape[0] < menor:
                 menor = comps.shape[0]
                 index = i
     return sub_comps, index, menor
+
+
+def get_comps_test(serie, periods, sub_periods):
+    main_components = decomp(serie, periods)
+    sub_comps = list()
+    for i, comp in enumerate(main_components.transpose()[:-1]):
+        sub = decomp(comp, sub_periods[i])
+        sub_comps.append(sub)
+    return sub_comps, sub.shape[0]
 
 
 def set_data(serie, sub_comps, index, menor, reg_vars=60, horizons=12):
@@ -132,29 +141,27 @@ def prepare_data(serie: np.ndarray, dec: bool,
     tuple
         X_train, y_train, X_test, y_test, normalizer scaler
     """
+    train_data = serie[:int(len(serie)*2/3)]
+    test_data = serie[int(len(serie)*2/3):]
+    scaler = MinMaxScaler()
+    train_data = scaler.fit_transform(train_data.reshape(-1, 1)).squeeze()
+    test_data = scaler.transform(test_data.reshape(-1, 1)).squeeze()
     if decomp_method == 'fft':
-        scaler = MinMaxScaler()
-        comp_data = scaler.fit_transform(serie.reshape(-1, 1))
-        serie = comp_data.squeeze()
+        main_components, periods = get_comps(train_data)
         if dec:
-            main_components = get_comps(serie)
             sub_comps, index, menor = get_sub_comps(main_components, central)
-
         else:
             sub_comps, index, menor = load_sub_comps(central)
-
-        X, y = set_data(serie, sub_comps, index, menor,
-                        reg_vars=reg_vars, horizons=horizons)
-        X_train = X[:int(len(X)*0.7)]
-        X_test = X[int(len(X)*0.7):]
-        y_train = y[:int(len(y)*0.7)]
-        y_test = y[int(len(y)*0.7):]
+        sub_periods = [sub[1] for sub in sub_comps]
+        sub_comps = [sub[0] for sub in sub_comps]
+        test_components, menor_test = get_comps_test(
+            test_data, periods, sub_periods)
+        X_train, y_train = set_data(train_data, sub_comps, index, menor,
+                                    reg_vars=reg_vars, horizons=horizons)
+        X_test, y_test = set_data(test_data, test_components, index,
+                                  menor_test, reg_vars=reg_vars,
+                                  horizons=horizons)
     else:
-        train_data = serie[:int(len(serie)*2/3)]
-        test_data = serie[int(len(serie)*2/3):]
-        scaler = MinMaxScaler()
-        train_data = scaler.fit_transform(train_data.reshape(-1, 1)).squeeze()
-        test_data = scaler.transform(test_data.reshape(-1, 1)).squeeze()
         widths = np.arange(1, 65)
         wttrain = cwt(train_data, ricker, widths).transpose()
         wttest = cwt(test_data, ricker, widths).transpose()
