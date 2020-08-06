@@ -41,8 +41,14 @@ $pip install -r requirements.txt
 - epochs:
 
     - Number of epochs you want to train each model.
-    - Default is 3
+    - Default is 10
+
+- decomp_method:
+
+    - Method to decompose the serie.
+    - Choose between fft or cwt
+    - Default is fft
 
 ```shell
-$python main.py --dataset data/inputs/your_serie --decompose 1 --test 0 --regvars 60 --horizons 12 --models mlp,gru,lstm --epochs 3
+$python main.py --dataset data/inputs/your_serie --decompose 1 --test 0 --regvars 60 --horizons 12 --models mlp,gru,lstm --epochs 3 --decomp_method cwt
 ```

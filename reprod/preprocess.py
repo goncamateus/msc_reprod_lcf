@@ -2,6 +2,7 @@ import os
 import pickle
 
 import numpy as np
+from scipy.signal import cwt, ricker
 from sklearn.preprocessing import MinMaxScaler
 
 from reprod.decomposition import decomp, get_periods
@@ -70,8 +71,38 @@ def set_data(serie, sub_comps, index, menor, reg_vars=60, horizons=12):
     return np.array(X), np.array(y)
 
 
+def set_data_cwt(serie, wttrain, wttest, scaler, horizons, reg_vars):
+    X_train = list()
+    X_test = list()
+    y = list()
+    for i in range(reg_vars, wttrain.shape[0]-horizons+1):
+        obs_y = [serie[i+j] for j in range(horizons)]
+        y.append(obs_y)
+    y_train = np.array(y)
+    y_train = scaler.transform(y_train)
+
+    y = list()
+    for i in range(reg_vars, wttest.shape[0]-horizons+1):
+        obs_y = [serie[wttrain.shape[0]+i+j] for j in range(horizons)]
+        y.append(obs_y)
+    y_test = np.array(y)
+    y_test = scaler.transform(y_test)
+
+    for i in range(reg_vars, wttrain.shape[0]-horizons+1):
+        X_train.append(wttrain[i-reg_vars:i])
+
+    for i in range(reg_vars, wttest.shape[0]-horizons+1):
+        X_test.append(wttest[i-reg_vars:i])
+
+    X_train = np.array(X_train)
+    X_test = np.array(X_test)
+
+    return X_train, y_train, X_test, y_test
+
+
 def prepare_data(serie: np.ndarray, dec: bool,
-                 central: str, reg_vars: int, horizons: int) -> tuple:
+                 central: str, reg_vars: int,
+                 horizons: int, decomp_method: str) -> tuple:
     """
     Preprocess data and separates it in train and test.
     All the data is normalized.
@@ -93,25 +124,41 @@ def prepare_data(serie: np.ndarray, dec: bool,
     horizons : int
         Number of horizons you want to predict
 
+    decomp_method : str
+        Lucas method or CWT method
+
     Returns
     -------
     tuple
         X_train, y_train, X_test, y_test, normalizer scaler
     """
-    scaler = MinMaxScaler()
-    comp_data = scaler.fit_transform(serie.reshape(-1, 1))
-    serie = comp_data.squeeze()
-    if dec:
-        main_components = get_comps(serie)
-        sub_comps, index, menor = get_sub_comps(main_components, central)
+    if decomp_method == 'fft':
+        scaler = MinMaxScaler()
+        comp_data = scaler.fit_transform(serie.reshape(-1, 1))
+        serie = comp_data.squeeze()
+        if dec:
+            main_components = get_comps(serie)
+            sub_comps, index, menor = get_sub_comps(main_components, central)
 
+        else:
+            sub_comps, index, menor = load_sub_comps(central)
+
+        X, y = set_data(serie, sub_comps, index, menor,
+                        reg_vars=reg_vars, horizons=horizons)
+        X_train = X[:int(len(X)*0.7)]
+        X_test = X[int(len(X)*0.7):]
+        y_train = y[:int(len(y)*0.7)]
+        y_test = y[int(len(y)*0.7):]
     else:
-        sub_comps, index, menor = load_sub_comps(central)
-
-    X, y = set_data(serie, sub_comps, index, menor,
-                    reg_vars=reg_vars, horizons=horizons)
-    X_train = X[:int(len(X)*0.7)]
-    X_test = X[int(len(X)*0.7):]
-    y_train = y[:int(len(y)*0.7)]
-    y_test = y[int(len(y)*0.7):]
+        train_data = serie[:int(len(serie)*2/3)]
+        test_data = serie[int(len(serie)*2/3):]
+        scaler = MinMaxScaler()
+        train_data = scaler.fit_transform(train_data.reshape(-1, 1)).squeeze()
+        test_data = scaler.transform(test_data.reshape(-1, 1)).squeeze()
+        widths = np.arange(1, 65)
+        wttrain = cwt(train_data, ricker, widths).transpose()
+        wttest = cwt(test_data, ricker, widths).transpose()
+        X_train, y_train, X_test, y_test = set_data_cwt(serie, wttrain,
+                                                        wttest, scaler,
+                                                        horizons, reg_vars)
     return X_train, y_train, X_test, y_test, scaler

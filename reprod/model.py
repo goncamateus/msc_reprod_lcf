@@ -73,9 +73,9 @@ def create_models(input_shape: tuple, learning_rate: float,
     return regressors
 
 
-def get_callbacks(central, model):
+def get_callbacks(central, model, decomp_method):
     cbs = list()
-    checkpoint_path = f"data/models/{central}/{model}.ckpt"
+    checkpoint_path = f"data/models/{central}/{decomp_method}/{model}.ckpt"
     cp_callback = callbacks.ModelCheckpoint(filepath=checkpoint_path,
                                             save_weights_only=True,
                                             period=2)
@@ -85,8 +85,8 @@ def get_callbacks(central, model):
     return cbs
 
 
-def load_models(central, regressors, models):
-    models_path = f"data/models/{central}/"
+def load_models(central, regressors, models, decomp_method):
+    models_path = f"data/models/{central}/{decomp_method}"
     for i, model in enumerate(models):
         path = models_path + model + '.ckpt'
         regressors[i].load_weights(path)
