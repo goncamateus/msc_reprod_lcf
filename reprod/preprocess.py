@@ -27,11 +27,6 @@ def get_sub_comps(main_components, central):
             menor = comps.shape[0]
             index = i
         sub_comps.append((comps, sub_periods))
-        print(f'saving comp {i}')
-        with open('data/components/{}/sub_comps_{}.pkl'.format(
-                central, i), 'wb') as pf:
-            pickle.dump((comps, sub_periods), pf)
-
     return sub_comps, index, menor
 
 

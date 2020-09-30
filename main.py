@@ -56,7 +56,7 @@ def main(dataset, test_only=False, dec=True,
                                horizons=horizons)
     if not test_only:
         for i, regressor in enumerate(regressors):
-            regressor.fit(X_train, y_train, epochs=epochs, batch_size=32,
+            regressor.fit(X_train, y_train, epochs=epochs, batch_size=128,
                           callbacks=get_callbacks(central, models[i],
                                                   decomp_method))
     else:
